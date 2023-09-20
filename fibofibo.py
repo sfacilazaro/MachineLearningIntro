@@ -133,12 +133,7 @@ def neuronilla(p,L,M,eta0,nIT):
         
     file = open('EV.txt','w')
     
-    ERROR = 0
-    
     for it in range(nIT):
-        
-        eta = 2 * eta0 * (1-ERROR/100)
-        #eta = 2**(3/2) * eta0 * (1-ERROR/100) ** (3/2)
         
         #forward
         o0 = np.concatenate((np.reshape(np.ones(N),(1,N)), Data))
@@ -158,6 +153,9 @@ def neuronilla(p,L,M,eta0,nIT):
         
         ERROR = E(hat,val,N)
         file.write('%03d\t%0.5f\n' % (it, ERROR))
+
+        eta = 2 * eta0 * (1-ERROR/100)
+        #eta = 2**(3/2) * eta0 * (1-ERROR/100) ** (3/2)
         
         
         #backprop
