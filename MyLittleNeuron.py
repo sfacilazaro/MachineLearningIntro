@@ -14,12 +14,6 @@ import matplotlib.pyplot as plt
 #import pandas as pd
 #import sklearn as skl
 
-#from sklearn.datasets import fetch_california_housing
-#calhouse = fetch_california_housing(as_frame=True)
-
-# PARAMETERS
-#p = 25
-#N = 100
 
 """
 learning rate encogiendose
@@ -39,7 +33,7 @@ def fibo(a,b,n):
     else:
         return fibo(a, b, n-1) + fibo(a, b, n-2)
     
-def genData(q,S):
+def genDataFibo(q,S):
     C = np.array(list(combinations(range(q), 2)))
     N = len(C)
     
@@ -69,16 +63,17 @@ def genData(q,S):
     
     return M, v
 
-#are there mistakes in this code for the training of a neural network with bakpropagation
+def acc(pred,targ,N):
+    a = 100 - sum(sum(np.abs(np.round(pred) - val)))/len(np.transpose(val)) * 100
+    return a
 
-def E(pred,val,N):
-    EEE = 100 - sum(sum(np.abs(np.round(pred) - val)))/len(np.transpose(val)) * 100
-    #ran = np.random.uniform(0,1,(np.shape(val)))
-    #ERR = sum(sum(0.5*(pred-val)*(pred-val)))/N
-    #REF = sum(sum(0.5*(ran -val)*(ran -val)))/N
-    return EEE
+def err(pred,targ,N):
+    ran = np.random.uniform(0,1,(np.shape(val)))
+    ERR = sum(sum(0.5*(pred-val)*(pred-val)))/N
+    REF = sum(sum(0.5*(ran -val)*(ran -val)))/N
+    return ERR/REF
 
-def neuronilla(p,L,M,eta0,nIT):
+def lilneuron(p,L,M,eta0,nIT):
     """
     Data --- matrix cointaining the training input set for the netwrok, each column is a different input
     value -- correct result that we want to predict
@@ -91,18 +86,7 @@ def neuronilla(p,L,M,eta0,nIT):
     lam ---- coupling of the penalty for overfitting
     eta ---- learning rate
     nIT ---- number of iterations for backprop
-    
-    scheme
-    input | hidden layer 1 | hidden layer 2 | output/prediction
     """
-    #parameters
-    #p = pp
-    #M = MM
-    #S = SS
-    #lam = 0.1
-    #eta = etet
-    #nIT = nitnit
-    #L = 3
     
     K = 1
     
@@ -151,11 +135,11 @@ def neuronilla(p,L,M,eta0,nIT):
         
         hat = np.reshape(hat,(1,N))
         
-        ERROR = E(hat,val,N)
-        file.write('%03d\t%0.5f\n' % (it, ERROR))
+        ac = acc(hat,val,N)
+        file.write('%03d\t%0.5f\n' % (it, ac))
 
-        eta = 2 * eta0 * (1-ERROR/100)
-        #eta = 2**(3/2) * eta0 * (1-ERROR/100) ** (3/2)
+        eta = 2 * eta0 * (1-ac/100)
+        #eta = 2**(3/2) * eta0 * (1-ac/100) ** (3/2)
         
         
         #backprop
