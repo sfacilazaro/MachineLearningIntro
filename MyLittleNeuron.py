@@ -132,7 +132,6 @@ def lilneuron(p,L,M,eta0,nIT):
         eta = 2 * eta0 * (1-ac/100)
         #eta = 2**(3/2) * eta0 * (1-ac/100) ** (3/2)
         
-        
         #backprop
         d2 = hat - val #+ lam * (sum(sum(W1)) + sum(sum(W2)) + sum(sum(W3)) + sum(sum(W4)))
         d1 = K*o1*(1-o1)*np.dot(np.transpose(W2),d2)
