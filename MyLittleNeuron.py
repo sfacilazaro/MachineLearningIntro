@@ -14,16 +14,8 @@ import matplotlib.pyplot as plt
 #import pandas as pd
 #import sklearn as skl
 
-
-"""
-learning rate encogiendose
-histograma de exito final y comparar aumentando el numero de neuronas y capas
-eta = eta_0 * (1-exito)
-"""
-
 def S(x):
     return 1/(1+np.exp(-x))
-
 
 def fibo(a,b,n):
     if n == 0:
@@ -88,7 +80,7 @@ def lilneuron(p,L,M,eta0,nIT):
     nIT ---- number of iterations for backprop
     """
     
-    K = 1
+    K = 1   #steepness of the sigmoid @ x = 0
     
     name = f'Data-p{p:02d}-S{L:04d}.txt'
     Data = np.loadtxt(name, dtype='float', delimiter='\t')
