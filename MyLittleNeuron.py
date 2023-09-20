@@ -70,10 +70,9 @@ def lilneuron(p,L,M,eta0,nIT):
     Data --- matrix cointaining the training input set for the netwrok, each column is a different input
     value -- correct result that we want to predict
     p ------ peairc number
-    L ------ number of layers (including input bat not output)
     M ------ number of neurons per hidden layer (not including bias)
     N ------ number of examples in the training set
-    S ------ length of each example of the training set
+    L,S----- length of each example of the training set
     W ------ weight matrices
     lam ---- coupling of the penalty for overfitting
     eta ---- learning rate
