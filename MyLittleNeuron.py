@@ -56,13 +56,13 @@ def genDataFibo(q,S):
     return M, v
 
 def acc(pred,targ,N):
-    a = 100 - sum(sum(np.abs(np.round(pred) - val)))/len(np.transpose(val)) * 100
+    a = 100 - sum(sum(np.abs(np.round(pred) - targ)))/len(np.transpose(targ)) * 100
     return a
 
 def err(pred,targ,N):
-    ran = np.random.uniform(0,1,(np.shape(val)))
-    ERR = sum(sum(0.5*(pred-val)*(pred-val)))/N
-    REF = sum(sum(0.5*(ran -val)*(ran -val)))/N
+    ran = np.random.uniform(0,1,(np.shape(targ)))
+    ERR = sum(sum(0.5*(pred-targ)*(pred-targ)))/N
+    REF = sum(sum(0.5*(ran -targ)*(ran -targ)))/N
     return ERR/REF
 
 def lilneuron(p,L,M,eta0,nIT):
