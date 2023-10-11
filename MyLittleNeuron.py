@@ -11,8 +11,14 @@ import numpy as np
 from itertools import combinations
 import matplotlib.pyplot as plt
 #import seaborn as sb
-#import pandas as pd
 #import sklearn as skl
+from sklearn.model_selection import train_test_split
+import tensorflow as tf
+#import pandas as pd
+import os
+import sys
+import subprocess
+
 
 def S(x):
     return 1/(1+np.exp(-x))
@@ -56,7 +62,7 @@ def genDataFibo(q,S):
     return M, v
 
 def acc(pred,targ,N):
-    a = 100 - sum(sum(np.abs(np.round(pred) - targ)))/len(np.transpose(targ)) * 100
+    a = 100 - sum(sum(np.abs(np.round(pred) - targ)))/N * 100
     return a
 
 def err(pred,targ,N):
@@ -65,10 +71,10 @@ def err(pred,targ,N):
     REF = sum(sum(0.5*(ran -targ)*(ran -targ)))/N
     return ERR/REF
 
-def lilneuron(p,L,M,eta0,nIT):
+def SillyLittleNeuron(p,L,M,eta0,nIT):
     """
     Data --- matrix cointaining the training input set for the netwrok, each column is a different input
-    value -- correct result that we want to predict
+    val ---- correct result that we want to predict
     p ------ module number
     M ------ number of neurons per hidden layer (not including bias)
     N ------ number of examples in the training set
@@ -106,7 +112,7 @@ def lilneuron(p,L,M,eta0,nIT):
     
     ind = [n for n in range(1,M+1)]
         
-    file = open('EV.txt','w')
+    #file = open('EV.txt','w')
     
     for it in range(nIT):
         
@@ -127,7 +133,7 @@ def lilneuron(p,L,M,eta0,nIT):
         hat = np.reshape(hat,(1,N))
         
         ac = acc(hat,val,N)
-        file.write('%03d\t%0.5f\n' % (it, ac))
+        #file.write('%03d\t%0.5f\n' % (it, ac))
 
         eta = 2 * eta0 * (1-ac/100)
         #eta = 2**(3/2) * eta0 * (1-ac/100) ** (3/2)
@@ -167,9 +173,123 @@ def lilneuron(p,L,M,eta0,nIT):
         #W9 += D9
         #W10+= D10
         
-    file.close()   
+    #file.close()   
     
-    EV = np.loadtxt('EV.txt', dtype='float', delimiter='\t')
-    plt.plot(EV[:,0],EV[:,1],'.')    
+    #EV = np.loadtxt('EV.txt', dtype='float', delimiter='\t')
+    #plt.plot(EV[:,0],EV[:,1],'.')    
     
-    return hat, val
+    return acc(hat,val,N)
+
+def ObscureLittleNeuron(p,L,M,nIT):
+    """
+    Data --- matrix cointaining the training input set for the netwrok, each column is a different input
+    val ---- correct result that we want to predict
+    p ------ module number
+    M ------ number of neurons per hidden layer (not including bias)
+    N ------ number of examples in the training set
+    L,S----- length of each example of the training set
+    nIT ---- number of iterations for backprop
+    """
+    
+    #DOR = 0.2 #drop out rate
+    seed = np.random.randint(0,nIT*nIT)
+    
+    name = f'Data-p{p:02d}-S{L:04d}.txt'
+    Data = np.loadtxt(name, dtype='float', delimiter='\t')
+    
+    name = f'val-p{p:02d}-S{L:04d}.txt'
+    val = np.loadtxt(name, dtype='float', delimiter='\t')
+    
+    S, N = np.shape(Data)
+    
+    DataT = np.transpose(Data)
+    
+    # load and preprocess your data (x and y)
+    #xTrain, xTest, yTrain, yTest = skl.model_selection.train_test_split(np.transpose(Data), val, test_size = 0.2, random_state = seed)
+    xTrain, xTest, yTrain, yTest = train_test_split(DataT, val, test_size = 0.2, random_state = seed)
+    
+    lilneu = tf.keras.Sequential([
+        tf.keras.layers.Dense(M, activation='relu', input_shape=(S,)),
+        #tf.keras.layers.Dropout(DOR),
+        #tf.keras.layers.Dense(M, activation='relu'),
+        tf.keras.layers.Dense(1, activation='sigmoid') #'softmax', 'relu', 'sigmoid'
+    ])
+
+    lilneu.compile(
+        loss='binary_crossentropy', #'categorical_crossentropy' - energy function
+        optimizer='adam',            #'SGD' stochastic gradient descent, 'RMSprop', 'adam' - optimizer algorithm
+        metrics=['mean_squared_error']        #evaluation measure to track the training
+    )
+    
+    # Save the original stdout
+    original_stdout = sys.stdout
+    
+    # Redirect stdout to /dev/null (or 'nul' on Windows)
+    with open(os.devnull, 'w') as fnull:
+        sys.stdout = fnull
+        history = lilneu.fit(x=DataT, y=val, epochs=nIT, batch_size=len(val))
+        hat = lilneu.predict(DataT)
+        
+    # Restore the original stdout
+    sys.stdout = original_stdout
+
+    val = np.reshape(val,(N,1))
+    
+    return acc(hat,val,N)
+
+def MyLittleComp(p,L):
+    
+    #p = 37
+    #L = 1000
+    M = 50
+    eta0 = 0.1
+    nIT = 1000
+    nSTT = 250 #1000
+    
+    #sillyList = []
+    obscrList = []
+    
+    for n in range(nSTT):
+        prog = f'progress at {100*n/nSTT}%'
+        print(prog)
+        #sillyAcc = SillyLittleNeuron(p,L,M,eta0,nIT)
+        obscrAcc = ObscureLittleNeuron(p,L,M,nIT)
+        #sillyList.append(sillyAcc)
+        obscrList.append(obscrAcc)
+    
+    #sillyArr = np.array(sillyList)
+    obscrArr = np.array(obscrList)
+
+    #name = f'SillyStat-p{p:02d}-S{L:04d}-STT{nSTT:05d}.txt'
+    #np.savetxt(name, sillyArr, delimiter='\t');
+    
+    name = f'ObscrStat-p{p:02d}-S{L:04d}-STT{nSTT:05d}.txt'
+    np.savetxt(name, obscrArr, delimiter='\t');
+    
+def complot(p,L,nSTT):
+    
+    name = f'SillyStat-p{p:02d}-S{L:04d}-STT{nSTT:05d}.txt'
+    sillyData = np.loadtxt(name, dtype='float', delimiter='\t')
+    
+    name = f'ObscrStat-p{p:02d}-S{L:04d}-STT{nSTT:05d}.txt'
+    obscrData = np.loadtxt(name, dtype='float', delimiter='\t')
+    
+    # Create a new figure
+    plt.figure(figsize=(8, 4))
+    
+    # Plot the histograms
+    plt.hist(sillyData, bins=15, alpha=0.5, label='Silly' ,  edgecolor='black')
+    plt.hist(obscrData, bins=45, alpha=0.5, label='Obscure', edgecolor='black')
+    
+    # Add labels and title
+    plt.xlabel('Accuracy')
+    plt.ylabel('Frequency')
+    plt.title('Accuracy at 1000 steps')
+    
+    # Add legend
+    plt.legend()
+    
+    # Show the histograms
+    plt.show()
+    
+    
